@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Central Air Conditioning System Simulation</title>
+
+<style>
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: #07111f;
+    color: white;
+}
+
+.container {
+    width: 95%;
+    max-width: 1400px;
+    margin: auto;
+    padding: 25px 0;
+}
+
+header {
+    text-align: center;
+    margin-bottom: 25px;
+}
+
+header h1 {
+    color: #55b8ff;
+    margin-bottom: 8px;
+}
+
+header p {
+    color: #b9c7d8;
+}
+
+.status-bar {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.status-card {
+    background: #111f33;
+    border: 1px solid #294b70;
+    border-radius: 12px;
+    padding: 20px;
+    text-align: center;
+}
+
+.status-card h3 {
+    font-size: 14px;
+    color: #9fb2c8;
+    margin: 0 0 12px;
+}
+
+.value {
+    font-size: 27px;
+    font-weight: bold;
+    color: #63c3ff;
+}
+
+.running {
+    color: #4cff91;
+}
+
+.stopped {
+    color: #ff6262;
+}
+
+.loop {
+    background: #172a45;
+    border-radius: 10px;
+    padding: 16px;
+    text-align: center;
+    margin-bottom: 25px;
+    color: #79caff;
+    font-weight: bold;
+}
+
+.grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 18px;
+}
+
+.card {
+    background: #101d30;
+    border: 1px solid #2b4e73;
+    border-radius: 14px;
+    padding: 22px;
+    min-height: 230px;
+}
+
+.card h2 {
+    color: #62bfff;
+    font-size: 19px;
+}
+
+.card p {
+    color: #bdcad8;
+    line-height: 1.6;
+}
+
+.metric {
+    display: flex;
+    justify-content: space-between;
+    border-bottom: 1px solid #243b55;
+    padding: 10px 0;
+}
+
+.metric span:last-child {
+    color: #5fc5ff;
+    font-weight: bold;
+}
+
+.controls {
+    background: #101d30;
+    border: 1px solid #2b4e73;
+    border-radius: 14px;
+    padding: 25px;
+    margin-top: 22px;
+}
+
+.controls h2 {
+    color: #62bfff;
+}
+
+button {
+    border: none;
+    border-radius: 8px;
+    padding: 12px 25px;
+    margin-right: 10px;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+.start {
+    background: #24b866;
+    color: white;
+}
+
+.stop {
+    background: #d94b4b;
+    color: white;
+}
+
+button:hover {
+    opacity: 0.85;
+}
+
+input[type="range"] {
+    width: 250px;
+}
+
+.alarm {
+    margin-top: 20px;
+    padding: 15px;
+    border-radius: 8px;
+    background: #102d21;
+    color: #5cff9a;
+}
+
+footer {
+    text-align: center;
+    color: #71869e;
+    margin-top: 30px;
+}
+
+@media(max-width: 900px) {
+    .status-bar,
+    .grid {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+
+@media(max-width: 600px) {
+    .status-bar,
+    .grid {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<header>
+    <h1>Central Air Conditioning System</h1>
+    <p>Comprehensive Enterprise HVAC Topology & Plant Simulation</p>
+</header>
+
+<!-- STATUS -->
+<div class="status-bar">
+
+    <div class="status-card">
+        <h3>SYSTEM STATUS</h3>
+        <div id="systemStatus" class="value running">RUNNING</div>
+    </div>
+
+    <div class="status-card">
+        <h3>ZONE TEMPERATURE</h3>
+        <div class="value">
+            <span id="temperature">21.3</span> °C
+        </div>
+    </div>
+
+    <div class="status-card">
+        <h3>CHILLED WATER FLOW</h3>
+        <div class="value">
+            <span id="waterFlow">350</span> GPM
+        </div>
+    </div>
+
+    <div class="status-card">
+        <h3>AHU BLOWER SPEED</h3>
+        <div class="value">
+            <span id="blower">1850</span> RPM
+        </div>
+    </div>
+
+</div>
+
+<!-- LOOP -->
+<div class="loop">
+    Active Central Loop:
+    Central Plant → Pumps → AHU → Ducts → Conditioned Rooms → Return Air Plenum
+</div>
+
+<!-- SYSTEM CARDS -->
+
+<div class="grid">
+
+    <div class="card">
+        <h2>🏭 1. Central Plant & Chillers</h2>
+
+        <p>
+            Produces chilled water through industrial
+            centrifugal chillers and cooling equipment.
+        </p>
+
+        <div class="metric">
+            <span>Status</span>
+            <span id="chillerStatus">Operational</span>
+        </div>
+
+        <div class="metric">
+            <span>Chilled Water</span>
+            <span id="chilledTemp">6.5 °C</span>
+        </div>
+
+        <div class="metric">
+            <span>Chiller Load</span>
+            <span id="load">72 %</span>
+        </div>
+    </div>
+
+
+    <div class="card">
+        <h2>⚡ 2. Cooling/Heating Pumps & BMS</h2>
+
+        <p>
+            Primary and secondary pumps distribute chilled
+            water under Building Management System control.
+        </p>
+
+        <div class="metric">
+            <span>Status</span>
+            <span>Operational</span>
+        </div>
+
+        <div class="metric">
+            <span>Pump Speed</span>
+            <span id="pumpSpeed">1450 RPM</span>
+        </div>
+
+        <div class="metric">
+            <span>Flow Rate</span>
+            <span id="pumpFlow">350 GPM</span>
+        </div>
+    </div>
+
+
+    <div class="card">
+        <h2>❄️ 3. Air Handling Unit (AHU)</h2>
+
+        <p>
+            Conditions and circulates air through chilled
+            water heat exchanger coils.
+        </p>
+
+        <div class="metric">
+            <span>Status</span>
+            <span id="ahuStatus">Operational</span>
+        </div>
+
+        <div class="metric">
+            <span>Blower Speed</span>
+            <span id="ahuRPM">1850 RPM</span>
+        </div>
+
+        <div class="metric">
+            <span>Filter</span>
+            <span>MERV-13</span>
+        </div>
+    </div>
+
+
+    <div class="card">
+        <h2>🌬️ 4. Supply Air Duct</h2>
+
+        <p>
+            Distributes conditioned air from the AHU
+            throughout the building zones.
+        </p>
+
+        <div class="metric">
+            <span>Supply Air</span>
+            <span id="supplyTemp">14.2 °C</span>
+        </div>
+
+        <div class="metric">
+            <span>Airflow</span>
+            <span id="airflow">12,500 CFM</span>
+        </div>
+    </div>
+
+
+    <div class="card">
+        <h2>🏢 5. Conditioned Room</h2>
+
+        <p>
+            Indoor zone where temperature is controlled
+            according to the selected setpoint.
+        </p>
+
+        <div class="metric">
+            <span>Room Temperature</span>
+            <span id="roomTemp">21.3 °C</span>
+        </div>
+
+        <div class="metric">
+            <span>Setpoint</span>
+            <span id="setpointDisplay">22 °C</span>
+        </div>
+
+        <div class="metric">
+            <span>Humidity</span>
+            <span id="humidity">50 %</span>
+        </div>
+    </div>
+
+
+    <div class="card">
+        <h2>🔄 6. Return Air Plenum</h2>
+
+        <p>
+            Collects return air from conditioned spaces
+            and sends it back toward the AHU.
+        </p>
+
+        <div class="metric">
+            <span>Return Air</span>
+            <span id="returnTemp">21.3 °C</span>
+        </div>
+
+        <div class="metric">
+            <span>Return Flow</span>
+            <span id="returnFlow">11,900 CFM</span>
+        </div>
+    </div>
+
+</div>
+
+
+<!-- CONTROLS -->
+
+<div class="controls">
+
+    <h2>🎛️ Simulation Control Panel</h2>
+
+    <button class="start" onclick="startSimulation()">
+        ▶ START SIMULATION
+    </button>
+
+    <button class="stop" onclick="stopSimulation()">
+        ■ STOP SIMULATION
+    </button>
+
+    <br><br>
+
+    <label>
+        Temperature Setpoint:
+        <strong>
+            <span id="setpointValue">22</span> °C
+        </strong>
+    </label>
+
+    <br>
+
+    <input
+        type="range"
+        min="18"
+        max="28"
+        step="0.5"
+        value="22"
+        id="setpoint"
+        oninput="changeSetpoint()"
+    >
+
+    <div id="alarm" class="alarm">
+        ✓ SYSTEM NORMAL — All major equipment operational
+    </div>
+
+</div>
+
+
+<footer>
+    Central HVAC Digital Simulation | Engineering Demonstration
+</footer>
+
+</div>
+
+
+<script>
+
+let running = true;
+
+let temperature = 21.3;
+let waterFlow = 350;
+let blower = 1850;
+let pumpSpeed = 1450;
+let load = 72;
+let setpoint = 22;
+
+let simulationTimer;
+
+
+/* START */
+
+function startSimulation() {
+
+    running = true;
+
+    document.getElementById("systemStatus").innerText = "RUNNING";
+
+    document.getElementById("systemStatus")
+        .className = "value running";
+
+    document.getElementById("chillerStatus")
+        .innerText = "Operational";
+
+    document.getElementById("ahuStatus")
+        .innerText = "Operational";
+
+    document.getElementById("alarm").innerText =
+        "✓ SYSTEM NORMAL — Simulation running";
+
+    if (!simulationTimer) {
+        simulationTimer = setInterval(updateSimulation, 1500);
+    }
+}
+
+
+/* STOP */
+
+function stopSimulation() {
+
+    running = false;
+
+    document.getElementById("systemStatus").innerText = "STOPPED";
+
+    document.getElementById("systemStatus")
+        .className = "value stopped";
+
+    document.getElementById("chillerStatus")
+        .innerText = "Standby";
+
+    document.getElementById("ahuStatus")
+        .innerText = "Standby";
+
+    document.getElementById("alarm").innerText =
+        "⚠ SYSTEM STOPPED — Simulation paused";
+}
+
+
+/* SETPOINT */
+
+function changeSetpoint() {
+
+    setpoint =
+        parseFloat(document.getElementById("setpoint").value);
+
+    document.getElementById("setpointValue")
+        .innerText = setpoint;
+
+    document.getElementById("setpointDisplay")
+        .innerText = setpoint + " °C";
+}
+
+
+/* SIMULATION ENGINE */
+
+function updateSimulation() {
+
+    if (!running) return;
+
+    /*
+       Temperature moves gradually toward
+       the selected setpoint.
+    */
+
+    if (temperature > setpoint) {
+        temperature -= 0.15;
+    }
+    else if (temperature < setpoint) {
+        temperature += 0.15;
+    }
+
+    temperature += (Math.random() - 0.5) * 0.08;
+
+
+    /*
+       Cooling load changes according
+       to temperature difference.
+    */
+
+    let difference =
+        Math.abs(temperature - setpoint);
+
+    load = 60 + difference * 8 +
+        (Math.random() * 6);
+
+
+    /*
+       Water flow
+    */
+
+    waterFlow =
+        300 + load * 0.7;
+
+
+    /*
+       Blower speed
+    */
+
+    blower =
+        1600 + load * 4;
+
+
+    /*
+       Pump speed
+    */
+
+    pumpSpeed =
+        1300 + load * 2;
+
+
+    updateDisplay();
+}
+
+
+/* UPDATE DISPLAY */
+
+function updateDisplay() {
+
+    document.getElementById("temperature")
+        .innerText = temperature.toFixed(1);
+
+    document.getElementById("roomTemp")
+        .innerText = temperature.toFixed(1) + " °C";
+
+    document.getElementById("returnTemp")
+        .innerText = temperature.toFixed(1) + " °C";
+
+    document.getElementById("waterFlow")
+        .innerText = waterFlow.toFixed(0);
+
+    document.getElementById("pumpFlow")
+        .innerText = waterFlow.toFixed(0) + " GPM";
+
+    document.getElementById("blower")
+        .innerText = blower.toFixed(0);
+
+    document.getElementById("ahuRPM")
+        .innerText = blower.toFixed(0) + " RPM";
+
+    document.getElementById("pumpSpeed")
+        .innerText = pumpSpeed.toFixed(0) + " RPM";
+
+    document.getElementById("load")
+        .innerText = load.toFixed(0) + " %";
+
+    document.getElementById("airflow")
+        .innerText =
+        (10000 + load * 35).toFixed(0) + " CFM";
+
+    document.getElementById("returnFlow")
+        .innerText =
+        (9500 + load * 33).toFixed(0) + " CFM";
+
+    document.getElementById("supplyTemp")
+        .innerText =
+        (14 + Math.random() * 0.5).toFixed(1) + " °C";
+
+    document.getElementById("humidity")
+        .innerText =
+        (48 + Math.random() * 4).toFixed(0) + " %";
+}
+
+
+/* INITIAL TIMER */
+
+simulationTimer = setInterval(updateSimulation, 1500);
+
+</script>
+
+</body>
+</html>
